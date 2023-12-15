@@ -177,7 +177,7 @@ class Player(pygame.sprite.Sprite):
     
     def check_damage(self,is_damaged):
         if is_damaged:
-            self.health=self.health-20
+            self.health=self.health-0
         if self.health<=0:
               print("you are dead")
               pygame.quit()
@@ -353,8 +353,8 @@ while running:
     for zombie in zombies:
         zombie.update(player.rect.center)
         zombie.check_death(player.rect.center,player.is_shooting)
-        player.check_damage(zombie.check_damage(player.rect.center))
-
+        player.check_damage((player.rect.center))
+#zombie.check_damage
         screen.blit(zombie.image, zombie.rect)
 
     # ...
@@ -401,6 +401,7 @@ while running:
     if player.stamina  <5:
         player.is_shooting=False
         
+    print(player.rect.center)
     
     health_bar(screen, 10, 10, player.health)
     stamina_bar(screen, 300, 10, player.stamina)

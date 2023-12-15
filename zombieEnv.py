@@ -1,6 +1,10 @@
+from typing import Any, SupportsFloat
 import gymnasium as gym
 import numpy as np
 import pygame
+
+import os
+
 def health_bar(surf, x, y, pct):
     '''Draw a health bar for the player'''
     if pct < 0:
@@ -39,16 +43,19 @@ def unpack_assprite_files(path):
             image = resize_image(pygame.image.load(os.path.join(path, filename)))
             images.append(image)
     return images
+walk_frames =  unpack_assprite_files(path="ASSEST\Run") 
+shoot_frames = unpack_assprite_files(path="ASSEST\ATTACK") 
+idle_frame =  resize_image(pygame.image.load(r"ASSEST\PNGExports\PNGExports\Idle.png"))
 
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, run_frames, walk_frames, shoot_frames, idle_frame):
+    def __init__(self, pos, walk_frames=walk_frames, shoot_frames=shoot_frames, idle_frame=idle_frame):
         super(Player, self).__init__()
         self.image = idle_frame
         self.rect = self.image.get_rect(topleft=pos)
 
-        self.run_frames = run_frames
+        #self.run_frames = run_frames
         self.walk_frames = walk_frames
         self.shoot_frames = shoot_frames
         self.idle_frame = idle_frame
@@ -258,6 +265,11 @@ class Zombie(pygame.sprite.Sprite):
             
             
 class ZombieEnv(gym.Env):
+    metadata = {
+        'render_modes': ['human', 'rgb_array'],
+        'render_fps': 60
+    }
+    
     def __init__(self,render_mode=None) :
         self.size=(800,800)
         self.screen = pygame.display.set_mode(self.size)
@@ -270,5 +282,84 @@ class ZombieEnv(gym.Env):
         self.idle_frame =  resize_image(pygame.image.load(r"ASSEST\PNGExports\PNGExports\Idle.png"))
         
         self.action_space=gym.spaces.Discrete(5)
-        self.observation_space=gym.spaces.Box(low=0,high=255,shape=(800,800,3),dtype=np.uint8)
+        self.observation_space=gym.spaces.Dict({
+            "player":gym.spaces.Box(low=(0,0),high=(800,800),dtype=np.float32,shape=(2,)),
+            "zombie1":gym.spaces.Box(low=(0,0),high=(800,800),dtype=np.float32,shape=(2,)),
+            "Zombie2":gym.spaces.Box(low=(0,0),high=(800,800),dtype=np.float32,shape=(2,)),
+            "Zombie3":gym.spaces.Box(low=(0,0),high=(800,800),dtype=np.float32,shape=(2,)),
+            "Zombie4":gym.spaces.Box(low=(0,0),high=(800,800),dtype=np.float32,shape=(2,)),
+            "Zombie5":gym.spaces.Box(low=(0,0),high=(800,800),dtype=np.float32,shape=(2,)),
+            "Zombie6":gym.spaces.Box(low=(0,0),high=(800,800),dtype=np.float32,shape=(2,)),
+            "Zombie7":gym.spaces.Box(low=(0,0),high=(800,800),dtype=np.float32,shape=(2,)),       
+        })
+            
+
+        # for _ in range(7):
+        #     self.zombies.append(Zombie())
+
         
+        
+        assert render_mode is None or render_mode in self.metadata['render_modes']
+        self.render_mode = render_mode
+    def _get_obs(self):
+        return {
+            "player":self.player.rect.center,
+            "zombie1":self.zombie1.rect.center,
+            "Zombie2":self.zombie2.rect.center,
+            "Zombie3":self.zombie3.rect.center,
+            "Zombie4":self.zombie4.rect.center,
+            "Zombie5":self.zombie5.rect.center,
+            "Zombie6":self.zombie6.rect.center,
+            "Zombie7":self.zombie7.rect.center,
+        }       
+            
+        
+    def reset(self):
+        
+        self.player=Player()
+        self.zombies=[]
+        self.zombie1=Zombie()
+        self.zombie2=Zombie()
+        self.zombie3=Zombie()
+        self.zombie4=Zombie()
+        self.zombie5=Zombie()
+        self.zombie6=Zombie()
+        self.zombie7=Zombie()
+        self.zombies.append(self.zombie1)
+        self.zombies.append(self.zombie2)
+        self.zombies.append(self.zombie3)
+        self.zombies.append(self.zombie4)
+        self.zombies.append(self.zombie5)
+        self.zombies.append(self.zombie6)
+        self.zombies.append(self.zombie7)
+    
+    def step(self,action):
+        self.player.update(action)
+        
+        Reward=0
+        for zombie in self.zombies:
+            zombie.update(self.player.rect.center)
+            zombie.check_death(self.player.rect.center,self.player.is_shooting)
+            self.player.check_damage(zombie.rect.center)
+            self.player.check_damage(zombie.check_damage(self.player.rect.center))
+            if zombie.is_dead:
+                Reward=Reward+2
+        if self.player.ISDEAD:
+            Reward=Reward-5
+                
+        observation=self._get_obs()
+        done=self.player.ISDEAD or Reward>13
+
+            
+
+        return observation,Reward,done,{}
+        #return self._get_obs(),self.player.health,self.player.ISDEAD,{}
+    def render(self, mode=None):
+        if self.render_mode=='human':
+            self.screen.fill((0, 0, 0))
+            self.screen.blit(self.player.image, self.player.rect)
+            for zombie in self.zombies:
+                self.screen.blit(zombie.image, zombie.rect)
+            health_bar(self.screen, 10, 10, self.player.health)
+            stamina_bar(self.screen, 10, 30, self.player.stamina)
+            pygame.display.update()
