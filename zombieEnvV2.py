@@ -2,7 +2,15 @@ from typing import Any, SupportsFloat
 import gymnasium as gym
 import numpy as np
 import pygame
-#pygame.init()
+pygame.init()
+
+
+pygame.font.init()
+
+# Rest of your code...
+
+
+
 import time
 import os
 
@@ -163,7 +171,7 @@ class Player(pygame.sprite.Sprite):
         
     def check_damage(self,is_damaged):
         if is_damaged:
-            self.health=self.health-0
+            self.health=self.health-.1
         if self.health<=0:
             self.ISDEAD=True     
             
@@ -306,6 +314,8 @@ class ZombieEnv(gym.Env):
         self.shoot_frames = unpack_assprite_files(path="ASSEST\ATTACK") 
         self.idle_frame =  resize_image(pygame.image.load(r"ASSEST\PNGExports\PNGExports\Idle.png"))
         
+        self.background=pygame.image.load(r"_53d0c924-3d11-4b95-89bb-584fa270efd5.png")
+        
         self.action_space=gym.spaces.Discrete(5)
         #pygame.init()
 
@@ -362,36 +372,54 @@ class ZombieEnv(gym.Env):
         self.zombies.append(self.zombie6)
         self.zombies.append(self.zombie7)
         self.reward=0
-        
+
         self.screen = pygame.display.set_mode((800, 600))
         self.clock = pygame.time.Clock()
         
         self.done=False
+        self.dead_zombies=[]
         
-        return self._get_obs() ,info
+        self.success=False
+        self.dead_last_time=False
+        
+        
+        
+        return self._get_obs() ,{}
     
     def step(self,action):
         self.player.update(action)
         
-        Reward=0
         for zombie in self.zombies:
             zombie.update(self.player.rect.center)
             zombie.check_death(self.player.rect.center,self.player.is_shooting)
-            self.player.check_damage(zombie.rect.center)
+            #self.player.check_damage(zombie.rect.center)
             self.player.check_damage(zombie.check_damage(self.player.rect.center))
-            if zombie.is_dead:
-                self.reward+=10
+            if zombie.is_dead and zombie  not in self.dead_zombies:
+                self.dead_zombies.append(zombie)
+                
+                self.reward+=2
                 
         if self.player.ISDEAD:
-            self.reward=self.reward-5
+            self.reward=self.reward-10
+            self.dead_last_time=True
                 
         observation=self._get_obs()
+        #print(self.reward)
+        if self.reward >13:
+            self.success=True
         
         if self.player.ISDEAD or self.reward>13 :
             self.done=True
+            #pygame.display.quit()
         
         # or len(self.zombies)==0
         terminated=self.done
+        
+        
+        """test"""
+        #terminated =False
+        
+        
         info={'health':self.player.health}
         truncated=False
         # pygame.time.Clock().tick(60)
@@ -406,7 +434,7 @@ class ZombieEnv(gym.Env):
             
         
         #print('fuck')
-        return observation,self.reward,terminated,truncated,info
+        return observation,self.reward,terminated,truncated,{}
      
     
     # 
@@ -458,15 +486,38 @@ class ZombieEnv(gym.Env):
         # Redraw the window
         # self.window.flip()
     def render_dick(self):
-        self.screen.fill((255,255,255))
+        
+        for event in pygame.event.get():
+            pass
+        
+        
+        
+        self.screen.fill((0,0,0))
+        #self.screen.blit(self.background,(0,0))
+        
+        
         self.screen.blit(self.player.image,self.player.rect)
         for zombies in self.zombies:
             self.screen.blit(zombies.image,zombies.rect)
             # if zombies.is_dead:
             #     self.zombies.remove(zombies)
         
+            
+        if self.dead_last_time:
+            font = pygame.font.Font(None, 36)
+            text = font.render("You died last time", True, (255, 0, 0))
+            self.screen.blit(text, (10, 10))
         
-        #self.clock.tick(5)
+        if self.success:
+            font = pygame.font.Font(None, 36)
+            text = font.render("Success!", True, (0, 0, 255))
+            self.screen.blit(text, (10, 10))
+        
+        
+        
+        
+        
+        self.clock.tick(30)
         pygame.display.flip()
         #print('dick')
         
