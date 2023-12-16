@@ -297,8 +297,7 @@ class ZombieEnv(gym.Env):
         self.run_frames = unpack_assprite_files(path="ASSEST\Run")
         
         #pygame
-        self.screen = pygame.display.set_mode((800, 600))
-        self.clock = pygame.time.Clock()
+
 
 
 
@@ -362,6 +361,12 @@ class ZombieEnv(gym.Env):
         self.zombies.append(self.zombie5)
         self.zombies.append(self.zombie6)
         self.zombies.append(self.zombie7)
+        self.reward=0
+        
+        self.screen = pygame.display.set_mode((800, 600))
+        self.clock = pygame.time.Clock()
+        
+        self.done=False
         
         return self._get_obs() ,info
     
@@ -375,13 +380,18 @@ class ZombieEnv(gym.Env):
             self.player.check_damage(zombie.rect.center)
             self.player.check_damage(zombie.check_damage(self.player.rect.center))
             if zombie.is_dead:
-                Reward=Reward+2
+                self.reward+=10
+                
         if self.player.ISDEAD:
-            Reward=Reward-5
+            self.reward=self.reward-5
                 
         observation=self._get_obs()
-        done=self.player.ISDEAD or Reward>13  # or len(self.zombies)==0
-        terminated=done
+        
+        if self.player.ISDEAD or self.reward>13 :
+            self.done=True
+        
+        # or len(self.zombies)==0
+        terminated=self.done
         info={'health':self.player.health}
         truncated=False
         # pygame.time.Clock().tick(60)
@@ -395,8 +405,8 @@ class ZombieEnv(gym.Env):
         self.render_dick()
             
         
-        print('fuck')
-        return observation,Reward,terminated,truncated,info
+        #print('fuck')
+        return observation,self.reward,terminated,truncated,info
      
     
     # 
@@ -456,7 +466,7 @@ class ZombieEnv(gym.Env):
             #     self.zombies.remove(zombies)
         
         
-        self.clock.tick(30)
+        #self.clock.tick(5)
         pygame.display.flip()
         #print('dick')
         
