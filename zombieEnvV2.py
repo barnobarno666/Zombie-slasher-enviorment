@@ -92,11 +92,12 @@ class Player(pygame.sprite.Sprite):
 
     def update(self,action):
         if self.canmove:self.is_shooting==True
+        self.check_stamina()
+
         self.handle_input(action)
         self.animate()
         self.move()
         self.ismoving=False
-        self.check_stamina()
 
     def handle_input(self,action):
 
@@ -122,7 +123,7 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.x = 0
 
-        self.is_shooting = True  if action==4 else False
+        self.is_shooting = True  if action==4 and self.canmove==True else False
         if self.is_shooting == False:
             self.handle_mouse_release()
             self.speed=5
@@ -171,7 +172,7 @@ class Player(pygame.sprite.Sprite):
         
     def check_damage(self,is_damaged):
         if is_damaged:
-            self.health=self.health-.1
+            self.health=self.health-50
         if self.health<=0:
             self.ISDEAD=True     
             
@@ -185,10 +186,11 @@ class Player(pygame.sprite.Sprite):
     def check_stamina(self):
         if self.is_shooting==True:
             
-            self.stamina=self.stamina -1     
+            self.stamina=self.stamina -10     
         
         if self.stamina <=0:
             self.canmove=False
+            self.is_shooting=False
         else:
             self.canmove= True
 
@@ -305,7 +307,8 @@ class ZombieEnv(gym.Env):
         self.run_frames = unpack_assprite_files(path="ASSEST\Run")
         
         #pygame
-
+        self.success=False
+        self.dead_last_time=False
 
 
 
@@ -321,7 +324,7 @@ class ZombieEnv(gym.Env):
 
    
 
-        
+        self.reward_last=0
         
         assert render_mode is None or render_mode in self.metadata['render_modes']
         self.render_mode = render_mode
@@ -333,7 +336,7 @@ class ZombieEnv(gym.Env):
             "zombies": gym.spaces.Box(low=np.zeros(num_zombies * 2), high=np.full(num_zombies * 2, 800), dtype=np.int32)
         })
 
-    
+
     
     def _get_obs(self):
         zombie_positions = np.array([zombie.rect.center for zombie in self.zombies]).flatten()
@@ -373,14 +376,13 @@ class ZombieEnv(gym.Env):
         self.zombies.append(self.zombie7)
         self.reward=0
 
-        self.screen = pygame.display.set_mode((800, 600))
+        self.screen = pygame.display.set_mode((800, 600),pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         
         self.done=False
         self.dead_zombies=[]
         
-        self.success=False
-        self.dead_last_time=False
+     
         
         
         
@@ -402,11 +404,13 @@ class ZombieEnv(gym.Env):
         if self.player.ISDEAD:
             self.reward=self.reward-10
             self.dead_last_time=True
+            self.success=False
                 
         observation=self._get_obs()
         #print(self.reward)
         if self.reward >13:
             self.success=True
+            self.dead_last_time=False
         
         if self.player.ISDEAD or self.reward>13 :
             self.done=True
@@ -429,11 +433,12 @@ class ZombieEnv(gym.Env):
             
         
         
-        
+        #print(self.player.health)
         self.render_dick()
             
         
         #print('fuck')
+        self.reward_last=self.reward
         return observation,self.reward,terminated,truncated,{}
      
     
@@ -505,14 +510,17 @@ class ZombieEnv(gym.Env):
             
         if self.dead_last_time:
             font = pygame.font.Font(None, 36)
-            text = font.render("You died last time", True, (255, 0, 0))
-            self.screen.blit(text, (10, 10))
+            text = font.render(f"You died last time  {self.reward_last}" , True, (255, 0, 0))
+            self.screen.blit(text, (700, 10))
         
         if self.success:
             font = pygame.font.Font(None, 36)
-            text = font.render("Success!", True, (0, 0, 255))
-            self.screen.blit(text, (10, 10))
-        
+            text = font.render(f"Success! {self.reward_last}", True, (0, 0, 255))
+            self.screen.blit(text, (700, 10))
+            
+        health_bar(self.screen, 10, 10, self.player.health)
+        stamina_bar(self.screen, 300, 10, self.player.stamina)
+
         
         
         

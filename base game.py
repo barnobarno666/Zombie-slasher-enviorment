@@ -177,7 +177,7 @@ class Player():
     
     def check_damage(self,is_damaged):
         if is_damaged:
-            self.health=self.health-0
+            self.health=self.health-20
         if self.health<=0:
               print("you are dead")
               pygame.quit()
