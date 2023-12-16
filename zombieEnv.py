@@ -349,10 +349,9 @@ class ZombieEnv(gym.Env):
                 
         observation=self._get_obs()
         done=self.player.ISDEAD or Reward>13
-
-            
-
         return observation,Reward,done,{}
+    
+    
         #return self._get_obs(),self.player.health,self.player.ISDEAD,{}
     def render(self, mode=None):
         if self.render_mode=='human':
@@ -363,3 +362,8 @@ class ZombieEnv(gym.Env):
             health_bar(self.screen, 10, 10, self.player.health)
             stamina_bar(self.screen, 10, 30, self.player.stamina)
             pygame.display.update()
+            #pygame.clock.tick(60)
+            
+        elif self.render_mode=='rgb_array':
+            pass
+        
