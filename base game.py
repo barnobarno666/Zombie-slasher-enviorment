@@ -49,7 +49,7 @@ walk_frames =  unpack_assprite_files(path="ASSEST\Run")
 shoot_frames = unpack_assprite_files(path="ASSEST\ATTACK") 
 idle_frame =  resize_image(pygame.image.load(r"ASSEST\PNGExports\PNGExports\Idle.png"))
 
-class Player(pygame.sprite.Sprite):
+class Player():
     def __init__(self, pos, run_frames, walk_frames, shoot_frames, idle_frame):
         super(Player, self).__init__()
         self.image = idle_frame
@@ -213,7 +213,7 @@ background = pygame.transform.scale(background, (800, 600))
 player = Player((100, 100), run_frames, walk_frames, shoot_frames, idle_frame)
 
 
-class Zombie(pygame.sprite.Sprite):
+class Zombie():
     def __init__(self, pos, run_frames, dead_frame):
         super(Zombie, self).__init__()
         self.image = run_frames[0]

@@ -3,8 +3,7 @@ import gymnasium as gym
 import numpy as np
 import pygame
 #pygame.init()
-
-
+import time
 import os
 
 def health_bar(surf, x, y, pct):
@@ -51,9 +50,13 @@ idle_frame =  resize_image(pygame.image.load(r"ASSEST\PNGExports\PNGExports\Idle
 
 
 
+
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, walk_frames=walk_frames, shoot_frames=shoot_frames, idle_frame=idle_frame):
         super(Player, self).__init__()
+
         self.image = idle_frame
         self.rect = self.image.get_rect(topleft=pos)
 
@@ -189,6 +192,7 @@ run_frames_zombie=unpack_assprite_files(path=r"ASSEST\64x64 Pixel Art Character 
 class Zombie(pygame.sprite.Sprite):
     def __init__(self, pos, run_frames=run_frames_zombie, dead_frame=dead_frame):
         super(Zombie, self).__init__()
+
         self.image = run_frames[0]
         self.rect = self.image.get_rect(center=pos)
 
@@ -250,7 +254,6 @@ class Zombie(pygame.sprite.Sprite):
                 self.image = self.flip_image(self.run_frames[self.current_frame]) if self.flipped else self.run_frames[self.current_frame]
                 self.animation_delay = 0
 
-
     def check_death(self, player_pos,is_shooting):
         # Convert player position to a vector
         player_vector = pygame.math.Vector2(*player_pos)
@@ -268,7 +271,19 @@ class Zombie(pygame.sprite.Sprite):
             self.is_dead = True
             return True
             
+
+
+def set_fps( observation,Reward,terminated,truncated,info,fps=60 ):
+    """ the following code will be used in the step method and will return the obs and etc after a fixed time """
+    times=time.time()
+    while True:
+        if time.time()  > times+ 1/fps:
+            return observation,Reward,terminated,truncated,info
             
+    
+
+
+
             
 class ZombieEnv(gym.Env):
     metadata = {
@@ -277,86 +292,38 @@ class ZombieEnv(gym.Env):
     }
     
     def __init__(self,render_mode=None) :
-        self.screen = pygame.display.set_mode((800, 600))
 
         self.size=(800,800)
         self.run_frames = unpack_assprite_files(path="ASSEST\Run")
-# for i in range(5):
-#     run_frames=run_frames+run_frames
+        
+        #pygame
+        self.screen = pygame.display.set_mode((800, 600))
+        self.clock = pygame.time.Clock()
+
+
+
 
         self.walk_frames =  unpack_assprite_files(path="ASSEST\Run") 
         self.shoot_frames = unpack_assprite_files(path="ASSEST\ATTACK") 
         self.idle_frame =  resize_image(pygame.image.load(r"ASSEST\PNGExports\PNGExports\Idle.png"))
         
         self.action_space=gym.spaces.Discrete(5)
-        # self.observation_space=gym.spaces.Dict({
-        #     "player": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #     "zombies":[gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #                gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #                gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #                gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #                gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #                gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #                gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32)]
-        #     # "Zombie2": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #     # "Zombie3": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #     # "Zombie4": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #     # "Zombie5": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #     # "Zombie6": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #     # "Zombie7": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),     
-        # })
-        # num_zombies = 7
-        # self.observation_space = gym.spaces.Dict({
-        #     "player": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-        #     "zombies": gym.spaces.Tuple((gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),) * num_zombies)
-        # })
-#         num_zombies = 7
-#         self.observation_space = gym.spaces.Dict({
-#         "player": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.float32),
-#         "zombies": gym.spaces.Box(low=np.zeros(num_zombies * 2), high=np.full(num_zombies * 2, 800), dtype=np.float32)
-# })
-                
+        #pygame.init()
 
-        # for _ in range(7):
-        #     self.zombies.append(Zombie())
-        
-        
+   
 
         
         
         assert render_mode is None or render_mode in self.metadata['render_modes']
         self.render_mode = render_mode
         
-        
-    # def _get_obs(self):
-    #     return {
-    #         "player":self.player.rect.center,
-    #         "zombies":[self.zombie1.rect.center,self.zombie2.rect.center,self.zombie2.rect.center,self.zombie2.rect.center,self.zombie2.rect.center,self.zombie2.rect.center,self.zombie2.rect.center]
-    #         # "Zombie2":
-    #         # "Zombie3":self.zombie3.rect.center,
-    #         # "Zombie4":self.zombie4.rect.center,
-    #         # "Zombie5":self.zombie5.rect.center,
-    #         # "Zombie6":self.zombie6.rect.center,
-    #         # "Zombie7":self.zombie7.rect.center,
-    #     }  
-    
-    # def _get_obs(self):
-    #     zombie_positions = np.array([zombie.rect.center for zombie in self.zombies]).flatten()
-    #     observation={
-    #         "player": self.player.rect.center,
-    #         "zombies": zombie_positions
-    #     }  
-    #     return observation
-    
-    # def _get_obs(self):    
-    #     player_obs = np.array(self.player.rect.center, dtype=np.float32)
-    #     zombies_obs = np.array([zombie.rect.center for zombie in self.zombies], dtype=np.float32).flatten()
-    #     return np.concatenate([player_obs, zombies_obs])
+   
         num_zombies = 7
         self.observation_space = gym.spaces.Dict({
             "player": gym.spaces.Box(low=np.array([0, 0]), high=np.array([800, 800]), dtype=np.int32),
             "zombies": gym.spaces.Box(low=np.zeros(num_zombies * 2), high=np.full(num_zombies * 2, 800), dtype=np.int32)
         })
+
     
     
     def _get_obs(self):
@@ -396,7 +363,7 @@ class ZombieEnv(gym.Env):
         self.zombies.append(self.zombie6)
         self.zombies.append(self.zombie7)
         
-        return self._get_obs() 
+        return self._get_obs() ,info
     
     def step(self,action):
         self.player.update(action)
@@ -413,38 +380,84 @@ class ZombieEnv(gym.Env):
             Reward=Reward-5
                 
         observation=self._get_obs()
-        
-        done=self.player.ISDEAD or Reward>13
+        done=self.player.ISDEAD or Reward>13 or len(self.zombies)==0
         terminated=done
         info={'health':self.player.health}
         truncated=False
-        pygame.time.Clock().tick(60)
+        # pygame.time.Clock().tick(60)
+        fps=60 #if self.render_mode=='human' else 700
+
+        #if self.render_mode:
+            
         
+        
+        
+        self.render_dick()
+            
+        
+        print('fuck')
         return observation,Reward,terminated,truncated,info
-    
+     
     
     # 
         #return self._get_obs(),self.player.health,self.player.ISDEAD,{}
     # # def render(self, mode='human'):4
     
-    # def render(self, mode='human'):
-    #     if mode == 'human':
-    #         pygame.display.init()
-    #         self.clock = pygame.time.Clock()
-    #         self.screen.fill((255, 255, 255))
-    #         self.clock.tick(60)
+    # def render(self ):
+    #     if self.render_mode == 'human':
+    #        # pygame.display.init()
+    #         screen = pygame.display.set_mode((800, 600))
+
+    #         #self.clock = pygame.time.Clock()
+    #         screen.fill((255, 255, 255))
+    #         #self.clock.tick(60)
             
     #         # Render player
-    #         self.player.render(self.screen)
+    #         # self.player.render(self.screen)
             
-    #         # Render zombies
-    #         for zombie in self.zombies:
-    #             zombie.render(self.screen)
+    #         # # Render zombies
+    #         # for zombie in self.zombies:
+    #         #     zombie.render(self.screen)
             
     #         pygame.display.flip()
-    #     elif mode == 'rgb_array':
+    #     elif self.render_mode == 'rgb_array':
     #         # Implement rendering to RGB array here
     #         pass
     #     else:
     #         raise ValueError("Invalid render mode. Supported modes are 'human' and 'rgb_array'.")
-   
+    def render(self):pass
+        #if self.render_mode=="human":
+        #@self.window.event
+        #def on_draw():
+            # Clear the window with a green color
+    #     pyglet.gl.glClearColor(0, 1, 0, 1)
+    #     self.window.clear()
+
+    #     # player_sprite = pyglet.sprite.Sprite(self.player.image, x=self.player.rect.center[0], y=self.player.rect.center[1])
+    #     # player_sprite.draw()
+    #     # def update(dt):
+    #     #     player_sprite.set_position(self.player.rect.center[0], self.player.rect.center[1])
+
+    # # Schedule the update function to be called every 1/60th of a second
+    #     #pyglet.clock.schedule_interval(on_draw, 1/60.0)
+
+
+    #     # Process all the events currently in the queue
+    #     pyglet.app.run()
+
+        # Redraw the window
+        # self.window.flip()
+    def render_dick(self):
+        self.screen.fill((255,255,255))
+        self.screen.blit(self.player.image,self.player.rect)
+        for zombies in self.zombies:
+            self.screen.blit(zombies.image,zombies.rect)
+            # if zombies.is_dead:
+            #     self.zombies.remove(zombies)
+        
+        
+        self.clock.tick(30)
+        pygame.display.flip()
+        #print('dick')
+        
+
