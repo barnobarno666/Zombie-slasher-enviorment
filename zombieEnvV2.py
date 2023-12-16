@@ -380,7 +380,7 @@ class ZombieEnv(gym.Env):
             Reward=Reward-5
                 
         observation=self._get_obs()
-        done=self.player.ISDEAD or Reward>13 or len(self.zombies)==0
+        done=self.player.ISDEAD or Reward>13  # or len(self.zombies)==0
         terminated=done
         info={'health':self.player.health}
         truncated=False
