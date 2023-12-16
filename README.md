@@ -1,1 +1,1 @@
-A gymnesium (gym) enviorment for training RL agents , still has some issues that's fixing 
+A gymnesium (gym) enviorment for training single  RL agent , works fine in human mode, might add other render mode for serious training later and tune the reward singnals 
